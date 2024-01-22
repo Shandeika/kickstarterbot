@@ -1,0 +1,15 @@
+version: '3.8'
+x-bot-environment:
+  &bot-environment
+  BOT_TOKEN: "YOUR_BOT_TOKEN"
+  DB_NAME: "YOUR_DB_NAME"
+  DB_USER: "YOUR_DB_USER"
+  DB_PASS: "YOUR_DB_PASSWORD"
+  DB_HOST: "YOUR_DB_HOST"
+
+services:
+  bot:
+    build:
+      context: .
+    restart: unless-stopped
+    environment: *bot-environment
