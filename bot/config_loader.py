@@ -1,8 +1,6 @@
 from dataclasses import dataclass
 from os import getenv
 
-from dotenv import load_dotenv
-
 
 @dataclass
 class Bot:
@@ -24,8 +22,6 @@ class Config:
 
 
 def load_config():
-    load_dotenv()
-    # TODO: Add some checks here?
     return Config(
         bot=Bot(token=getenv("BOT_TOKEN")),
         db=DB(
