@@ -1,11 +1,11 @@
 version: '3.8'
 x-bot-environment:
   &bot-environment
-  BOT_TOKEN: "YOUR_BOT_TOKEN"
-  DB_NAME: "YOUR_DB_NAME"
-  DB_USER: "YOUR_DB_USER"
-  DB_PASS: "YOUR_DB_PASSWORD"
-  DB_HOST: "YOUR_DB_HOST"
+  BOT_TOKEN: "${BOT_TOKEN}"
+  DB_NAME: "${DB_NAME}"
+  DB_USER: "${DB_USER}"
+  DB_PASS: "${DB_PASS}"
+  DB_HOST: "${DB_HOST}"
 
 services:
   bot:
