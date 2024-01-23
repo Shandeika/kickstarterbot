@@ -33,9 +33,8 @@ async def inline_cmd(query: types.InlineQuery):
     logging.debug("Start inline query")
     session = query.bot.get_db_session()
     logging.debug("Got db session")
-    tags = (
-        session.query(Tag).join(User).filter(User.user_id == query.from_user.id).all()
-    )
+    user = session.query(User).filter(User.user_id == query.from_user.id).first()
+    tags = user.tags
     logging.debug("Got tags")
 
     results = list()
