@@ -177,5 +177,54 @@ async def process_approval(message: types.Message, state: FSMContext):
         await message.answer("Неправильный ответ")
 
 
+class EditTagStates(StatesGroup):
+    WaitingForTag = State()
+    WaitingForText = State()
+
+
+@router.message(Command("edit_tag"))
+async def edit_tag(message: types.Message, state: FSMContext):
+    await message.answer("Введите тег")
+    await state.set_state(EditTagStates.WaitingForTag)
+
+
+@router.message(EditTagStates.WaitingForTag, F.text)
+async def process_tag(message: types.Message, state: FSMContext):
+    tag = message.text
+    session = message.bot.get_db_session()
+    tags = session.query(Tag).filter(Tag.user_id == message.from_user.id).all()
+    if tag not in [tag.tag for tag in tags]:
+        await message.answer("Такого тега нет в базе данных")
+    else:
+        tag = (
+            session.query(Tag)
+            .filter(Tag.tag == tag and Tag.user_id == message.from_user.id)
+            .first()
+        )
+        await state.update_data(tag=tag.tag)
+        await message.answer(f"Текущий текст:\n<code>{tag.text}</code>")
+        await message.answer("Введите новый текст")
+        await state.set_state(EditTagStates.WaitingForText)
+    session.close()
+
+
+@router.message(EditTagStates.WaitingForText, F.text)
+async def process_text(message: types.Message, state: FSMContext):
+    text = message.text
+    data = await state.get_data()
+    tag = data.get("tag")
+    session = message.bot.get_db_session()
+    tag = (
+        session.query(Tag)
+        .filter(Tag.tag == tag and Tag.user_id == message.from_user.id)
+        .first()
+    )
+    tag.text = text
+    session.commit()
+    session.close()
+    await message.answer("Тег успешно изменен в базе данных")
+    await state.clear()
+
+
 def register_commands(dp: Dispatcher):
     dp.include_router(router=router)
