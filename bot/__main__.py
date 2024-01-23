@@ -15,6 +15,7 @@ from bot.handlers.commands import register_commands
 async def set_bot_commands(bot: Bot):
     commands = [
         BotCommand(command="add_tag", description="Добавляет тэг с текстом"),
+        BotCommand(command="remove_tag", description="Удаляет тэг"),
     ]
     await bot.set_my_commands(commands, scope=BotCommandScopeDefault())
     pass

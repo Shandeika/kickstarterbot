@@ -1,4 +1,5 @@
 import logging
+import random
 
 from aiogram import types, Dispatcher, Router, F
 from aiogram.filters import Command
@@ -119,6 +120,54 @@ async def process_text(message: types.Message, state: FSMContext):
         await message.answer("Тег успешно добавлен в базу данных")
 
         await state.clear()
+
+
+class RemoveTagStates(StatesGroup):
+    WaitingForTag = State()
+    WaitingForApproval = State()
+
+
+@router.message(Command("remove_tag"))
+async def remove_tag(message: types.Message, state: FSMContext):
+    await message.answer("Введите тег")
+    await state.set_state(RemoveTagStates.WaitingForTag)
+
+
+@router.message(RemoveTagStates.WaitingForTag, F.text)
+async def process_tag(message: types.Message, state: FSMContext):
+    tag = message.text
+    session = message.bot.get_db_session()
+    tags = session.query(Tag).filter(Tag.user_id == message.from_user.id).all()
+    if tag not in [tag.tag for tag in tags]:
+        await message.answer("Такого тега нет в базе данных")
+    else:
+        await state.update_data(tag=tag)
+        await message.answer("Подтвердите удаление")
+        first_number = random.randint(1, 10)
+        second_number = random.randint(1, 10)
+        await state.update_data(
+            first_number=first_number,
+            second_number=second_number,
+            sum=first_number + second_number,
+        )
+        await message.answer(
+            f"Напишите правильный ответ: {first_number} + {second_number} = ?"
+        )
+        await state.set_state(RemoveTagStates.WaitingForApproval)
+
+
+@router.message(RemoveTagStates.WaitingForApproval, F.text)
+async def process_approval(message: types.Message, state: FSMContext):
+    data = await state.get_data()
+    if message.text == str(data.get("sum")):
+        session = message.bot.get_db_session()
+        session.query(Tag).filter(Tag.tag == data.get("tag")).delete()
+        session.commit()
+        session.close()
+        await message.answer("Тег успешно удален из базы данных")
+        await state.clear()
+    else:
+        await message.answer("Неправильный ответ")
 
 
 def register_commands(dp: Dispatcher):
