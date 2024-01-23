@@ -36,6 +36,12 @@ async def inline_cmd(query: types.InlineQuery):
     logging.debug("Got db session")
     user = session.query(User).filter(User.user_id == query.from_user.id).first()
     tags = user.tags
+    if query.query in [tag.tag for tag in tags]:
+        tags = [tag for tag in tags if query.query in tag.tag]
+    elif query.query == "":
+        tags = user.tags
+    else:
+        tags = [tag for tag in tags if query.query in tag.text]
     logging.debug("Got tags")
 
     results = list()
@@ -53,8 +59,9 @@ async def inline_cmd(query: types.InlineQuery):
             )
         )
     logging.debug(f"Got results final ({results})")
-    await query.bot.answer_inline_query(query.id, results=results)
+    await query.bot.answer_inline_query(query.id, results=results[:50])
     logging.debug("End inline query")
+    session.close()
 
 
 class AddTagStates(StatesGroup):
